@@ -1,0 +1,55 @@
+from dao import Dao
+import networkx as nx
+
+class Model:
+    def __init__(self):
+        self.dao = Dao()
+        self.grafo=None
+
+    def load_years(self):
+        lista=self.dao.leggi_anni()
+        if not lista:
+            print(f"Lista vuota(model)")
+            return
+        return lista
+
+    def load_all(self,year):
+        lista=self.dao.leggi_squadre(year)
+        if not lista:
+            print(f"Lista vuota(model)")
+            return
+        return lista
+
+    def build_graph(self,year):
+        rows=self.dao.leggi_squadre(year)
+        if not rows:
+            print(f"Lista vuota(model)")
+            return
+        sigle=[]
+        for r in rows:
+            sigle.append(r["team_code"])
+        self.grafo=nx.complete_graph(sigle).to_undirected()
+        for r in rows:
+            sigla=r["team_code"]
+            self.grafo.nodes[sigla]["name"]=r["name"]
+            self.grafo.nodes[sigla]["payroll"]=r["stipendio"]
+
+        for u,v in self.grafo.edges():
+            su=self.grafo.nodes[u]["payroll"]
+            sv=self.grafo.nodes[v]["payroll"]
+            self.grafo[u][v]["weight"]=su+sv
+        return self.grafo
+
+    def get_adjacent(self,team_code):
+        results=[]
+        for vicino in self.grafo.neighbors(team_code):
+            nome_vicino=self.grafo.nodes[vicino]["name"]
+            peso=self.grafo[team_code][vicino]["weight"]
+            results.append((vicino,nome_vicino,peso))
+        return results
+
+
+
+
+
+
