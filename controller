@@ -1,0 +1,61 @@
+import flet as ft
+from model import Model
+from view import View
+
+
+class Controller:
+    def __init__(self, model: Model, view: View):
+        self.model = model
+        self.view = view
+
+    def populate_dd_years(self):
+        lista=self.model.load_years()
+        if not lista:
+            print("Lista vuota(controller)")
+            return
+        self.view.dd_anno.options.clear()
+        for year in lista:
+            year1=year["year"]
+            year2=year["year"]
+            self.view.dd_anno.options.append(ft.dropdown.Option(key=year1,text=year2))
+        self.view.update()
+
+    def populate_first_listview(self,e):
+        year=self.view.dd_anno.value
+        grafo=self.model.build_graph(year)
+        lista=self.model.load_all(year)
+        self.view.txt_out_squadre.controls.clear()
+        self.view.dd_squadra.options.clear()
+        self.view.txt_out_squadre.controls.append(ft.Text(f"Numero di squadre: {self.model.grafo.number_of_nodes()}\n"))
+        for n in lista:
+            sigla=n["team_code"]
+            nome=n["name"]
+            self.view.txt_out_squadre.controls.append(ft.Text(f"{sigla} ({nome})"))
+            self.view.dd_squadra.options.append(ft.dropdown.Option(key=sigla,text=f"{sigla} ({nome})"))
+        self.view.update()
+
+
+    def handle_crea_grafo(self,e):
+        year=self.view.dd_anno.value
+        grafo=self.model.build_graph(year)
+        print(self.model.grafo)
+
+
+    def handle_dettagli(self,e):
+        squadra=self.view.dd_squadra.value
+        risultato=[]
+        self.view.txt_risultato.controls.clear()
+        lista=self.model.get_adjacent(squadra)
+        for n in lista:
+            sigla=n[0]
+            nome=n[1]
+            stipendio=str(n[2])
+            risultato.append([sigla,nome,stipendio])
+        risultato_nuovo=sorted(risultato, key=lambda x: x[2], reverse=True)
+        for sigla,nome,stipendio in risultato_nuovo:
+            self.view.txt_risultato.controls.append(ft.Text(f"{sigla} ({nome}) -peso {stipendio}"))
+        self.view.update()
+
+
+    def handle_percorso(self,e):
+        pass
