@@ -1,0 +1,53 @@
+from DB_connect import DBConnect
+
+class Dao:
+    def __init__(self):
+        pass
+
+    def leggi_anni(self):
+        cnx=DBConnect.get_connection()
+        results=[]
+        if cnx is None:
+            print(f"Errore di connessione")
+            return
+        cursor = cnx.cursor(dictionary=True)
+        query=("SELECT DISTINCT year "
+               "FROM team "
+               "WHERE year>=1980 ;")
+        try:
+            cursor.execute(query)
+            rows=cursor.fetchall()
+            for row in rows:
+                results.append(row)
+        except Exception as e:
+            print(f"Errore nella esecuzione della query {e}")
+        finally:
+            cursor.close()
+            cnx.close()
+        return results
+
+    def leggi_squadre(self,year):
+        cnx=DBConnect.get_connection()
+        results=[]
+        if cnx is None:
+            print(f"Errore di connessione")
+            return
+        cursor = cnx.cursor(dictionary=True)
+        query=("SELECT t.team_code,t.name,SUM(s.salary)AS stipendio "
+               "FROM team t,salary s "
+               "WHERE s.team_id=t.id "
+               "AND t.year=%s "
+               "GROUP BY t.team_code,t.name ;")
+        try:
+            cursor.execute(query,(year,))
+            rows=cursor.fetchall()
+            for row in rows:
+                results.append(row)
+        except Exception as e:
+            print(f"Errore nella esecuzione della query: {e}")
+        finally:
+            cursor.close()
+            cnx.close()
+        return results
+
+
